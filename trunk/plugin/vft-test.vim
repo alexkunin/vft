@@ -1,4 +1,4 @@
-" VFT-Test 0.1 by Alex Kunin <alexkunin@gmail.com>
+" VFT-Test 0.1a by Alex Kunin <alexkunin@gmail.com>
 " Sample plugin that utilizes VFT - VIM Form Toolkit.
 
 let s:file = expand('<sfile>:p')
@@ -6,8 +6,7 @@ let s:file = expand('<sfile>:p')
 function! s:RunForm()
     tabnew
 
-    call setline(1, readfile(s:file))
-    execute "normal 1Gd/^finish$\<CR>dd"
+    call setline(1, vft#LoadResources(s:file).get('testform'))
 
     let l:form = vft#InitCurBuf()
 
@@ -49,11 +48,9 @@ endfunction
 
 nmap <silent> <F5> :call <SID>RunForm()<CR>
 
-function! s:GetTail(name)
-    let l:lines = readfile(expand('<sfile>'))
-endfunction
-
 finish
+
+testform <<< END
 
     This plugin demonstrates    Tip: use Tab/Shift-Tab to navigate,
     comboboxes, checkboxes,     Space or Enter to change values.
@@ -76,4 +73,4 @@ finish
         ( ) manual |foldmethod|     ( ) marker |foldmethod|
         ( ) indent |foldmethod|     ( ) syntax |foldmethod|
         ( ) expr |foldmethod|       ( ) diff |foldmethod|
-
+END
