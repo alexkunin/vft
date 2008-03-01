@@ -1,4 +1,4 @@
-" VIM Form Toolkit 0.1 by Alex Kunin <alexkunin@gmail.com>
+" VIM Form Toolkit 0.1a by Alex Kunin <alexkunin@gmail.com>
 
 function! s:put(x, y, string)
     let l:line = getline(a:y)
@@ -408,3 +408,48 @@ function! vft#InitCurBuf()
     call l:form.initialize()
     return l:form
 endf
+
+let s:Resources = { 'filename':'', 'lines':[], 'resources':{} }
+
+function! s:Resources.initialize(filename) dict
+    let l:result = deepcopy(self)
+    let l:result.filename = a:filename
+    return l:result
+endfunction
+
+function! s:Resources.get(resource) dict
+    if empty(self.lines)
+        let l:lines = readfile(self.filename)
+        let i = match(l:lines, '^\s*:\{-0,1}\s*fini\(\|s\|sh\)')
+
+        if i == -1
+            throw 's:Resources.get(): ":finish" was not found within "' . self.filename . '"'
+        endif
+
+        let self.lines = l:lines[i + 1:]
+    endif
+
+    if !has_key(self.resources, a:resource)
+        let l:pattern = '^\s*' . escape(a:resource, ' []"\') . '\s*<<<\s*\(.\{-}\)\s*$'
+        let i = match(self.lines, l:pattern)
+
+        if i == -1
+            throw 's:Resources.get(): resource "' . a:resource . '" was not found within "' . self.filename . '"'
+        endif
+
+        let l:terminator = matchlist(self.lines[i], l:pattern)[1]
+        let j = match(self.lines, l:terminator, i + 1)
+
+        if j == -1
+            throw 's:Resources.get(): terminator "' . l:terminator . '" of resource "' . a:resource . '" was not found within "' . self.filename . '"'
+        endif
+
+        let self.resources[a:resource] = self.lines[i + 1:j - 1]
+    endif
+
+    return self.resources[a:resource]
+endfunction
+
+function! vft#LoadResources(filename)
+    return s:Resources.initialize(a:filename)
+endfunction
